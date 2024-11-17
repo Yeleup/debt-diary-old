@@ -38,8 +38,8 @@ class ExpenseReportProvider implements ProviderInterface
 
     private function convertToExpenseReport(ExpenseType $expenseType, $context): ExpenseReport
     {
-        $startDate = $context['filter']['startDate'] ?? null;
-        $endDate = $context['filter']['endDate'] ?? null;
+        $startDate = $context['filters']['startDate'] ?? null;
+        $endDate = $context['filters']['endDate'] ?? null;
 
         $report = new ExpenseReport();
         $report->setId($expenseType->getId());
