@@ -57,7 +57,7 @@ class ExpenseRepository extends ServiceEntityRepository
         $this->getEntityManager()->flush();
     }
 
-    public function sumByExpenseTypeAndDateRange(ExpenseType $expenseType, ?string $startDate, ?string $endDate): float
+    public function sumByExpenseTypeAndDateRange(ExpenseType $expenseType, ?string $startDate, ?string $endDate, ?User $user): float
     {
         $qb = $this->createQueryBuilder('e')
             ->select('SUM(e.amount) as total')
@@ -70,6 +70,10 @@ class ExpenseRepository extends ServiceEntityRepository
         if ($endDate) {
             $qb->andWhere('e.createdAt < :endDate')->setParameter('endDate', $endDate);
         }
+        if ($user) {
+            $qb->andWhere('e.user = :user')->setParameter('user', $user);
+        }
+
         return $qb->getQuery()->getSingleScalarResult() ?? 0;
     }
 }

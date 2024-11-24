@@ -8,12 +8,14 @@ use App\ApiResource\ExpenseReport;
 use App\Entity\ExpenseType;
 use App\Repository\ExpenseRepository;
 use App\Repository\ExpenseTypeRepository;
+use Symfony\Component\Security\Core\Security;
 
 class ExpenseReportProvider implements ProviderInterface
 {
     public function __construct(
         protected ExpenseTypeRepository $expenseTypeRepository,
         protected ExpenseRepository $expenseRepository,
+        protected Security $security
     )
     {
     }
@@ -41,11 +43,16 @@ class ExpenseReportProvider implements ProviderInterface
         $startDate = $context['filters']['startDate'] ?? null;
         $endDate = $context['filters']['endDate'] ?? null;
 
+        $user = null;
+        if (isset($context['filters']['own'])) {
+            $user = $this->security->getUser();
+        }
+
         $report = new ExpenseReport();
         $report->setId($expenseType->getId());
         $report->setTitle($expenseType->getTitle());
-        $amount = $this->expenseRepository->sumByExpenseTypeAndDateRange($expenseType, $startDate, $endDate);
-        $amount += $this->calculateAmountForChildren($expenseType, $startDate, $endDate);
+        $amount = $this->expenseRepository->sumByExpenseTypeAndDateRange($expenseType, $startDate, $endDate, $user);
+        $amount += $this->calculateAmountForChildren($expenseType, $startDate, $endDate, $user);
         $report->setAmount($amount);
 
         $childrenReports = [];
@@ -57,12 +64,12 @@ class ExpenseReportProvider implements ProviderInterface
         return $report;
     }
 
-    private function calculateAmountForChildren(ExpenseType $expenseType, $startDate, $endDate): float
+    private function calculateAmountForChildren(ExpenseType $expenseType, $startDate, $endDate, $user): float
     {
         $amount = 0;
         foreach ($expenseType->getChildren() as $child) {
-            $amount += $this->expenseRepository->sumByExpenseTypeAndDateRange($child, $startDate, $endDate);
-            $amount += $this->calculateAmountForChildren($child, $startDate, $endDate);
+            $amount += $this->expenseRepository->sumByExpenseTypeAndDateRange($child, $startDate, $endDate, $user);
+            $amount += $this->calculateAmountForChildren($child, $startDate, $endDate, $user);
         }
         return $amount;
     }
