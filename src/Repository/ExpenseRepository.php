@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Expense;
 use App\Entity\ExpenseType;
 use App\Entity\User;
+use Carbon\Carbon;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -65,10 +66,10 @@ class ExpenseRepository extends ServiceEntityRepository
             ->setParameter('expenseType', $expenseType);
 
         if ($startDate) {
-            $qb->andWhere('e.createdAt > :startDate')->setParameter('startDate', $startDate);
+            $qb->andWhere('e.createdAt > :startDate')->setParameter('startDate', Carbon::parse($startDate)->startOfDay());
         }
         if ($endDate) {
-            $qb->andWhere('e.createdAt < :endDate')->setParameter('endDate', $endDate);
+            $qb->andWhere('e.createdAt < :endDate')->setParameter('endDate', Carbon::parse($endDate)->endOfDay());
         }
         if ($user) {
             $qb->andWhere('e.user = :user')->setParameter('user', $user);
